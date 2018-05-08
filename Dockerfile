@@ -33,5 +33,8 @@ RUN echo "xdebug.remote_port=9000" >> /usr/local/etc/php/conf.d/docker-php-ext-x
 RUN echo "xdebug.idekey=PHPSTORM" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 RUN echo "xdebug.remote_connect_back=on" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 
+# Fix up web file permissions
+RUN chown -R www-data:www-data src
+
 # Clean up
 RUN rm -rf /var/lib/apt/lists/*

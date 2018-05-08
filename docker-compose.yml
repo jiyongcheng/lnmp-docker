@@ -67,4 +67,6 @@ services:
     tty: true
     ports:
       - 9000
-
+networks:
+  default:
+    driver: bridge
