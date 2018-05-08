@@ -1,0 +1,37 @@
+FROM php:7.1-fpm
+
+# PHP configuration
+ADD ./docker/php/config/php.ini /usr/local/etc/php/php.ini
+
+# Install server dependencies
+RUN \
+    apt-get update && \
+    apt-get install -y \
+    curl git imagemagick libcurl4-gnutls-dev libgeoip-dev libmagickcore-dev libmagickwand-dev libmcrypt-dev libicu-dev \
+    libpng-dev libssh2-1-dev libssl-dev libxml2-dev wget
+
+RUN docker-php-ext-install bcmath curl gd intl mbstring mcrypt pcntl pdo pdo_mysql soap sockets xml zip
+
+# Install pecl packages
+RUN pecl install geoip-1.1.1 imagick-3.4.3 mongodb-1.2.10 redis-3.1.3 ssh2-1.1.2 && \
+    docker-php-ext-enable geoip imagick mongodb redis ssh2
+
+# Install composer
+RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+
+# Add project files and set work directory
+ADD . /app
+WORKDIR /app
+
+# Debugger
+RUN apt-get update && apt-get install -y autoconf
+RUN pecl install xdebug
+RUN docker-php-ext-enable xdebug
+RUN echo "zend_extension=/usr/local/lib/php/extensions/no-debug-non-zts-20160303/xdebug.so" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+RUN echo "xdebug.remote_enable=on" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+RUN echo "xdebug.remote_port=9000" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+RUN echo "xdebug.idekey=PHPSTORM" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+RUN echo "xdebug.remote_connect_back=on" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
+
+# Clean up
+RUN rm -rf /var/lib/apt/lists/*

@@ -1,0 +1,70 @@
+version: "3"
+services:
+  redis:
+    image: redis:4.0
+  mysql:
+    image: mysql:5.7
+    command: mysqld --sql-mode='ONLY_FULL_GROUP_BY,STRICT_TRANS_TABLES,NO_ZERO_IN_DATE,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION'
+    environment:
+      - MYSQL_ROOT_PASSWORD=test123
+      - MYSQL_USER=user
+      - MYSQL_PASSWORD=password
+      - MYSQL_DATABASE=test
+  mariadb:
+    image: mariadb:latest
+    restart: always
+    environment:
+      - MYSQL_ROOT_PASSWORD=test123
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin:latest
+    restart: always
+    container_name: phpmyadmin
+    environment:
+      - PMA_ARBITRARY=1
+    ports:
+      - 8080:80
+    volumes:
+      - /sessions
+    depends_on:
+      - mariadb
+      - mysql
+  nginx_api:
+    image: nginx:1.13
+    volumes:
+      - ./src:/app/src
+      - ./docker/nginx/vhost/api.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "7081:80"
+    links:
+      - app
+  nginx_store:
+    image: nginx:1.13
+    volumes:
+      - ./src:/app/src
+      - ./docker/nginx/vhost/store.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "7080:80"
+    links:
+      - app
+  nginx_admin:
+    image: nginx:1.13
+    volumes:
+      - ./src:/app/src
+      - ./docker/nginx/vhost/admin.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - "7082:80"
+    links:
+      - app
+  app:
+    build: .
+    env_file: ./docker/environments/development.env.dist
+    volumes:
+      - ./src:/app/src
+    links:
+      - mysql
+      - mariadb
+      - redis
+    tty: true
+    ports:
+      - 9000
+
