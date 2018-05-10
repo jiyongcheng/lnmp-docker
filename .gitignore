@@ -1,2 +1,5 @@
-src/store/*
-.vscode
+src/*
+.vscode/*
+.idea/*
+docker/data
+docker/mysql
